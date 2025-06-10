@@ -42,6 +42,8 @@ require("./config/database")
 
 // Routes
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+// Mount auth routes at both /auth and /api/auth for compatibility
+app.use("/auth", require("./routes/auth"))
 app.use("/api/auth", require("./routes/auth"))
 app.use("/api/journals", require("./middleware/auth"), require("./routes/journals"))
 app.use("/api/categories", require("./middleware/auth"), require("./routes/categories"))
@@ -52,7 +54,7 @@ app.get("/", (req, res) => {
   res.json({
     message: "Daily Journal API",
     documentation: "/api-docs",
-    authentication: "/api/auth/github",
+    authentication: "/auth/github",
     token: token || null
   });
 })
