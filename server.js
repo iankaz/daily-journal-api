@@ -48,11 +48,13 @@ app.use("/api/categories", require("./middleware/auth"), require("./routes/categ
 
 // Root route
 app.get("/", (req, res) => {
+  const token = req.query.token;
   res.json({
     message: "Daily Journal API",
     documentation: "/api-docs",
     authentication: "/api/auth/github",
-  })
+    token: token || null
+  });
 })
 
 // Error handling middleware
