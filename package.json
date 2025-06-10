@@ -1,0 +1,32 @@
+{
+  "name": "daily-journal-api",
+  "version": "1.0.0",
+  "description": "A RESTful API for managing daily journal entries with OAuth authentication",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "passport": "^0.6.0",
+    "passport-github2": "^0.1.12",
+    "express-session": "^1.17.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "joi": "^17.9.2",
+    "swagger-ui-express": "^5.0.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.2"
+  },
+  "keywords": ["journal", "api", "oauth", "mongodb", "express"],
+  "author": "Your Name",
+  "license": "MIT"
+}

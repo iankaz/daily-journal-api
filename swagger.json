@@ -1,0 +1,1025 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Daily Journal API",
+    "version": "1.0.0",
+    "description": "A RESTful API for managing daily journal entries with OAuth authentication"
+  },
+  "servers": [
+    {
+      "url": "https://cse341-rlcp.onrender.com",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "connect.sid"
+      }
+    },
+    "schemas": {
+      "Journal": {
+        "type": "object",
+        "required": ["title", "content", "mood", "category"],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique identifier"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Journal entry title"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 5000,
+            "description": "Journal entry content"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Entry date"
+          },
+          "mood": {
+            "type": "string",
+            "enum": ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"],
+            "description": "Mood for the day"
+          },
+          "weather": {
+            "type": "string",
+            "enum": ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"],
+            "description": "Weather condition"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "description": "Tags for categorization"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Privacy setting"
+          },
+          "category": {
+            "type": "string",
+            "description": "Category ID"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Location where entry was written"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique identifier"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Category description"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-F]{6}$",
+            "description": "Hex color code"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Whether this is a default category"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API information",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "documentation": {
+                      "type": "string"
+                    },
+                    "authentication": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "summary": "Initiate GitHub OAuth",
+        "security": [],
+        "responses": {
+          "302": {
+            "description": "Redirect to GitHub OAuth"
+          }
+        }
+      }
+    },
+    "/auth/user": {
+      "get": {
+        "summary": "Get current user",
+        "responses": {
+          "200": {
+            "description": "Current user information"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout user",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully"
+          },
+          "500": {
+            "description": "Logout failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals": {
+      "get": {
+        "summary": "Get all journal entries",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mood",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"]
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of journal entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "journals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Journal"
+                      }
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "currentPage": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new journal entry",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content", "mood", "category"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "mood": {
+                    "type": "string",
+                    "enum": ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"]
+                  },
+                  "weather": {
+                    "type": "string",
+                    "enum": ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"]
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 50
+                    }
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Journal entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Journal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals/{id}": {
+      "get": {
+        "summary": "Get a specific journal entry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Journal entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Journal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Journal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a journal entry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "mood": {
+                    "type": "string",
+                    "enum": ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"]
+                  },
+                  "weather": {
+                    "type": "string",
+                    "enum": ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"]
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 50
+                    }
+                  },
+                  "isPrivate": {
+                    "type": "boolean"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Journal entry updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Journal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Journal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a journal entry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Journal entry deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Journal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "summary": "Get all categories",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Category"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-F]{6}$"
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "get": {
+        "summary": "Get a specific category",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a category",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-F]{6}$"
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error, invalid ID, or duplicate name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a category",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID or category has associated journals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
