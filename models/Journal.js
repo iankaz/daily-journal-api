@@ -25,7 +25,7 @@ const journalSchema = new mongoose.Schema({
   weather: {
     type: String,
     enum: ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"],
-    default: "sunny",
+    required: true,
   },
   tags: [
     {
@@ -37,11 +37,6 @@ const journalSchema = new mongoose.Schema({
   isPrivate: {
     type: Boolean,
     default: true,
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -68,6 +63,5 @@ journalSchema.pre("save", function (next) {
 })
 
 journalSchema.index({ userId: 1, date: -1 })
-journalSchema.index({ userId: 1, category: 1 })
 
 module.exports = mongoose.model("Journal", journalSchema)

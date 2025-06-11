@@ -46,7 +46,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 app.use("/auth", require("./routes/auth"))
 app.use("/api/auth", require("./routes/auth"))
 app.use("/api/journals", require("./middleware/auth"), require("./routes/journals"))
-app.use("/api/categories", require("./middleware/auth"), require("./routes/categories"))
+app.use("/api/users", require("./middleware/auth"), require("./routes/users"))
 
 // Root route
 app.get("/", (req, res) => {

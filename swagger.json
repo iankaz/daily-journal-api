@@ -26,36 +26,27 @@
     "schemas": {
       "Journal": {
         "type": "object",
-        "required": ["title", "content", "mood", "category"],
+        "required": ["title", "content", "mood", "weather"],
         "properties": {
-          "_id": {
-            "type": "string",
-            "description": "Unique identifier"
-          },
           "title": {
             "type": "string",
             "maxLength": 200,
-            "description": "Journal entry title"
+            "description": "Title of the journal entry"
           },
           "content": {
             "type": "string",
             "maxLength": 5000,
-            "description": "Journal entry content"
-          },
-          "date": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Entry date"
+            "description": "Content of the journal entry"
           },
           "mood": {
             "type": "string",
             "enum": ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"],
-            "description": "Mood for the day"
+            "description": "Current mood"
           },
           "weather": {
             "type": "string",
             "enum": ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"],
-            "description": "Weather condition"
+            "description": "Current weather"
           },
           "tags": {
             "type": "array",
@@ -63,33 +54,16 @@
               "type": "string",
               "maxLength": 50
             },
-            "description": "Tags for categorization"
+            "description": "Tags for the entry (optional)"
           },
           "isPrivate": {
             "type": "boolean",
-            "description": "Privacy setting"
-          },
-          "category": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Category ID"
+            "description": "Whether the entry is private (optional)"
           },
           "location": {
             "type": "string",
             "maxLength": 100,
-            "description": "Location where entry was written"
-          },
-          "userId": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
+            "description": "Location (optional)"
           }
         }
       },
@@ -742,6 +716,134 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "Get all users",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "summary": "Get user by ID",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          },
+          "404": {
+            "description": "User not found"
           }
         }
       }
