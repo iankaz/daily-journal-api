@@ -21,6 +21,26 @@ const journalSchema = new mongoose.Schema(
         message: "Invalid mood value",
       },
     },
+    weather: {
+      type: String,
+      required: [true, "Weather is required"],
+      enum: {
+        values: ["sunny", "cloudy", "rainy", "snowy", "windy", "stormy"],
+        message: "Invalid weather value",
+      },
+    },
+    tags: [{
+      type: String,
+      trim: true
+    }],
+    isPrivate: {
+      type: Boolean,
+      default: false
+    },
+    location: {
+      type: String,
+      trim: true
+    },
     date: {
       type: Date,
       default: Date.now,

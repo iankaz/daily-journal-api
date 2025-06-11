@@ -5,6 +5,20 @@
     "version": "1.0.0",
     "description": "A RESTful API for managing daily journal entries with OAuth authentication"
   },
+  "tags": [
+    {
+      "name": "Journal",
+      "description": "Endpoints for managing journal entries"
+    },
+    {
+      "name": "User",
+      "description": "Endpoints for managing user accounts"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    }
+  ],
   "servers": [
     {
       "url": "https://cse341-rlcp.onrender.com",
@@ -64,47 +78,6 @@
             "type": "string",
             "maxLength": 100,
             "description": "Location (optional)"
-          }
-        }
-      },
-      "Category": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "_id": {
-            "type": "string",
-            "description": "Unique identifier"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 50,
-            "description": "Category name"
-          },
-          "description": {
-            "type": "string",
-            "maxLength": 200,
-            "description": "Category description"
-          },
-          "color": {
-            "type": "string",
-            "pattern": "^#[0-9A-F]{6}$",
-            "description": "Hex color code"
-          },
-          "userId": {
-            "type": "string",
-            "description": "User ID"
-          },
-          "isDefault": {
-            "type": "boolean",
-            "description": "Whether this is a default category"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
@@ -178,6 +151,7 @@
     },
     "/auth/github": {
       "get": {
+        "tags": ["Auth"],
         "summary": "Initiate GitHub OAuth",
         "security": [],
         "responses": {
@@ -189,6 +163,7 @@
     },
     "/auth/user": {
       "get": {
+        "tags": ["Auth"],
         "summary": "Get current user information",
         "responses": {
           "200": {
@@ -209,6 +184,7 @@
     },
     "/auth/logout": {
       "post": {
+        "tags": ["Auth"],
         "summary": "Logout user",
         "responses": {
           "200": {
@@ -229,6 +205,7 @@
     },
     "/api/journals": {
       "get": {
+        "tags": ["Journal"],
         "summary": "Get all journals for authenticated user",
         "security": [{ "cookieAuth": [] }],
         "responses": {
@@ -251,6 +228,7 @@
         }
       },
       "post": {
+        "tags": ["Journal"],
         "summary": "Create a new journal entry",
         "security": [{ "cookieAuth": [] }],
         "requestBody": {
@@ -285,6 +263,7 @@
     },
     "/api/journals/{id}": {
       "get": {
+        "tags": ["Journal"],
         "summary": "Get a specific journal entry",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
@@ -314,6 +293,7 @@
         }
       },
       "put": {
+        "tags": ["Journal"],
         "summary": "Update a journal entry",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
@@ -356,6 +336,7 @@
         }
       },
       "delete": {
+        "tags": ["Journal"],
         "summary": "Delete a journal entry",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
@@ -378,350 +359,9 @@
         }
       }
     },
-    "/api/categories": {
-      "get": {
-        "summary": "Get all categories",
-        "responses": {
-          "200": {
-            "description": "List of categories",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Category"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a new category",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["name"],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 50
-                  },
-                  "description": {
-                    "type": "string",
-                    "maxLength": 200
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#[0-9A-F]{6}$"
-                  },
-                  "isDefault": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Category created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error or duplicate name",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/categories/{id}": {
-      "get": {
-        "summary": "Get a specific category",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid ID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update a category",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 50
-                  },
-                  "description": {
-                    "type": "string",
-                    "maxLength": 200
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#[0-9A-F]{6}$"
-                  },
-                  "isDefault": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Category updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error, invalid ID, or duplicate name",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete a category",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid ID or category has associated journals",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/users": {
       "get": {
+        "tags": ["User"],
         "summary": "Get all users",
         "security": [{ "cookieAuth": [] }],
         "responses": {
@@ -746,7 +386,8 @@
     },
     "/api/users/{id}": {
       "get": {
-        "summary": "Get user by ID",
+        "tags": ["User"],
+        "summary": "Get a specific user",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
           {
@@ -775,7 +416,8 @@
         }
       },
       "put": {
-        "summary": "Update user",
+        "tags": ["User"],
+        "summary": "Update a user",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
           {
@@ -826,7 +468,8 @@
         }
       },
       "delete": {
-        "summary": "Delete user",
+        "tags": ["User"],
+        "summary": "Delete a user",
         "security": [{ "cookieAuth": [] }],
         "parameters": [
           {
@@ -844,6 +487,43 @@
           },
           "404": {
             "description": "User not found"
+          }
+        }
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Handle GitHub OAuth callback",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "GitHub OAuth callback handled successfully"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get JWT token for authenticated user",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "JWT token for authenticated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
