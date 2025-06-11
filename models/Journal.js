@@ -1,67 +1,44 @@
 const mongoose = require("mongoose")
 
-const journalSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 200,
-  },
-  content: {
-    type: String,
-    required: true,
-    maxlength: 5000,
-  },
-  date: {
-    type: Date,
-    required: true,
-    default: Date.now,
-  },
-  mood: {
-    type: String,
-    enum: ["very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"],
-    required: true,
-  },
-  weather: {
-    type: String,
-    enum: ["sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"],
-    required: true,
-  },
-  tags: [
-    {
+const journalSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
+      required: [true, "Title is required"],
       trim: true,
-      maxlength: 50,
+      maxlength: [100, "Title cannot exceed 100 characters"],
     },
-  ],
-  isPrivate: {
-    type: Boolean,
-    default: true,
+    content: {
+      type: String,
+      required: [true, "Content is required"],
+      trim: true,
+    },
+    mood: {
+      type: String,
+      required: [true, "Mood is required"],
+      enum: {
+        values: ["happy", "sad", "angry", "neutral", "excited", "anxious"],
+        message: "Invalid mood value",
+      },
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  location: {
-    type: String,
-    maxlength: 100,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-})
+  {
+    timestamps: true,
+  }
+)
 
-journalSchema.pre("save", function (next) {
-  this.updatedAt = Date.now()
-  next()
-})
-
+// Index for faster queries
 journalSchema.index({ userId: 1, date: -1 })
 
-module.exports = mongoose.model("Journal", journalSchema)
+const Journal = mongoose.model("Journal", journalSchema)
+
+module.exports = Journal

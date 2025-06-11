@@ -1,36 +1,31 @@
 const Joi = require("joi")
 
 const journalSchema = Joi.object({
-  title: Joi.string().trim().max(200).required(),
-  content: Joi.string().max(5000).required(),
+  title: Joi.string().required().min(1).max(100).messages({
+    "string.empty": "Title is required",
+    "string.min": "Title must be at least 1 character long",
+    "string.max": "Title cannot exceed 100 characters",
+  }),
+  content: Joi.string().required().min(1).messages({
+    "string.empty": "Content is required",
+    "string.min": "Content must be at least 1 character long",
+  }),
   mood: Joi.string()
-    .valid("very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful")
-    .required(),
-  weather: Joi.string()
-    .valid("sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy")
-    .required(),
-  tags: Joi.array().items(Joi.string().trim().max(50)).default([]),
-  isPrivate: Joi.boolean().default(true),
-  location: Joi.string().max(100).allow("").default("")
+    .valid("happy", "sad", "angry", "neutral", "excited", "anxious")
+    .required()
+    .messages({
+      "any.only": "Mood must be one of: happy, sad, angry, neutral, excited, anxious",
+    }),
+  date: Joi.date().default(() => new Date()),
 })
 
-const journalUpdateSchema = Joi.object({
-  title: Joi.string().trim().max(200),
-  content: Joi.string().max(5000),
-  mood: Joi.string().valid("very-happy", "happy", "neutral", "sad", "very-sad", "anxious", "excited", "grateful"),
-  weather: Joi.string().valid("sunny", "cloudy", "rainy", "snowy", "stormy", "foggy", "windy"),
-  tags: Joi.array().items(Joi.string().trim().max(50)),
-  isPrivate: Joi.boolean(),
-  location: Joi.string().max(100).allow("")
-}).min(1)
+const journalUpdateSchema = journalSchema.fork(
+  ["title", "content", "mood", "date"],
+  (schema) => schema.optional()
+)
 
-const validateJournal = (data) => {
-  return journalSchema.validate(data)
-}
-
-const validateJournalUpdate = (data) => {
-  return journalUpdateSchema.validate(data)
-}
+const validateJournal = (data) => journalSchema.validate(data, { abortEarly: false })
+const validateJournalUpdate = (data) => journalUpdateSchema.validate(data, { abortEarly: false })
 
 module.exports = {
   validateJournal,

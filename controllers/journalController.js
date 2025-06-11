@@ -1,5 +1,4 @@
 const Journal = require("../models/Journal")
-const Category = require("../models/Category")
 const { validateJournal, validateJournalUpdate } = require("../validation/journalValidation")
 
 /**
@@ -12,11 +11,10 @@ class JournalController {
    */
   static async getAllJournals(req, res) {
     try {
-      const { page = 1, limit = 10, category, mood, startDate, endDate } = req.query
+      const { page = 1, limit = 10, mood, startDate, endDate } = req.query
       const filter = { userId: req.user._id }
 
       // Apply filters
-      if (category) filter.category = category
       if (mood) filter.mood = mood
       if (startDate || endDate) {
         filter.date = {}
@@ -25,7 +23,6 @@ class JournalController {
       }
 
       const journals = await Journal.find(filter)
-        .populate("category", "name color")
         .sort({ date: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
@@ -52,7 +49,7 @@ class JournalController {
       const journal = await Journal.findOne({
         _id: req.params.id,
         userId: req.user._id,
-      }).populate("category", "name color")
+      })
 
       if (!journal) {
         return res.status(404).json({ error: "Journal not found" })
@@ -78,24 +75,12 @@ class JournalController {
         return res.status(400).json({ error: error.details[0].message })
       }
 
-      // Verify category belongs to user
-      const category = await Category.findOne({
-        _id: value.category,
-        userId: req.user._id,
-      })
-
-      if (!category) {
-        return res.status(400).json({ error: "Invalid category" })
-      }
-
       const journal = new Journal({
         ...value,
         userId: req.user._id,
       })
 
       await journal.save()
-      await journal.populate("category", "name color")
-
       res.status(201).json(journal)
     } catch (error) {
       console.error("Error creating journal:", error)
@@ -116,22 +101,11 @@ class JournalController {
         return res.status(400).json({ error: error.details[0].message })
       }
 
-      // Verify category belongs to user if provided
-      if (value.category) {
-        const category = await Category.findOne({
-          _id: value.category,
-          userId: req.user._id,
-        })
-
-        if (!category) {
-          return res.status(400).json({ error: "Invalid category" })
-        }
-      }
-
-      const journal = await Journal.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, value, {
-        new: true,
-        runValidators: true,
-      }).populate("category", "name color")
+      const journal = await Journal.findOneAndUpdate(
+        { _id: req.params.id, userId: req.user._id },
+        value,
+        { new: true, runValidators: true }
+      )
 
       if (!journal) {
         return res.status(404).json({ error: "Journal not found" })
